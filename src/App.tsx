@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactElement } from 'react';
 import { TeacherProvider, TeacherToggle, useTeacher } from './components/TeacherMode';
 import { CourseProgress } from './components/CourseProgress';
 import { ProcessFlow } from './components/ProcessFlow';
@@ -1369,7 +1369,7 @@ function AppContent() {
     </section>
   );
 
-  const sections: Record<Section, () => JSX.Element> = {
+  const sections: Record<Section, () => ReactElement> = {
     hero: renderHero,
     question: renderQuestion,
     ecosystem: renderEcosystem,
