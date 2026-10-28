@@ -706,11 +706,51 @@ function AppContent() {
     }
   };
 
+  const capabilityStatusDetails: Record<string, string> = {
+    'Disponible': 'La función forma parte del servicio, pero puede tener límites de uso. No significa acceso ilimitado.',
+    'Enfoque relevante': 'Es un uso central de la herramienta; aun así, verifica si encaja con tu tarea concreta.',
+    'Puede depender del plan': 'El acceso, el modelo disponible o la cantidad de usos puede variar entre niveles gratuitos y de pago, según la cuenta y la región.',
+    'Verificar disponibilidad actual': 'No se da por garantizada esta función. Confirma su disponibilidad y sus límites en la información oficial.'
+  };
+
+  const toolPlanDetails: Record<ToolId, { plans: string; note: string; url: string; linkLabel: string }> = {
+    chatgpt: {
+      plans: 'OpenAI ofrece acceso gratuito y planes Go, Plus, Business y Enterprise.',
+      note: 'Los modelos, herramientas y límites de uso varían por plan, cuenta y región. La etiqueta del comparador no afirma que una función pertenezca exclusivamente a un plan.',
+      url: 'https://chatgpt.com/pricing/',
+      linkLabel: 'Consultar planes de ChatGPT'
+    },
+    gemini: {
+      plans: 'Google ofrece acceso sin costo y planes Google AI Plus, Google AI Pro y Google AI Ultra.',
+      note: 'Los planes pagos pueden ampliar el acceso a modelos y funciones o sus límites. La disponibilidad depende también del país y de la cuenta.',
+      url: 'https://gemini.google/subscriptions/',
+      linkLabel: 'Consultar planes de Google AI'
+    },
+    claude: {
+      plans: 'Anthropic ofrece Claude Free, Pro y Max para uso individual.',
+      note: 'Free incluye funciones básicas; Pro amplía el acceso e incluye funciones como Projects, y Max ofrece límites de uso más altos. Las funciones y límites pueden cambiar.',
+      url: 'https://claude.com/pricing',
+      linkLabel: 'Consultar planes de Claude'
+    },
+    perplexity: {
+      plans: 'Perplexity ofrece acceso gratuito y planes de pago.',
+      note: 'Las cuotas y funciones avanzadas dependen del plan vigente. Comprueba en la página oficial si la capacidad que necesitas está incluida en tu cuenta.',
+      url: 'https://www.perplexity.ai/pricing',
+      linkLabel: 'Consultar planes de Perplexity'
+    },
+    notebooklm: {
+      plans: 'NotebookLM ofrece acceso Standard sin costo y niveles ampliados mediante Google AI Plus, Pro y Ultra. Las cuentas de trabajo o educativas pueden tener límites según su licencia.',
+      note: 'Los niveles amplían límites de uso y algunas funciones. Google puede presentar el producto como Gemini Notebook en su documentación más reciente.',
+      url: 'https://support.google.com/gemininotebook/answer/16213268?hl=es',
+      linkLabel: 'Consultar planes y límites de NotebookLM'
+    }
+  };
+
   const renderComparator = () => (
     <section className="px-4 py-16 max-w-5xl mx-auto">
       <h2 className="section-title text-center">Comparador interactivo</h2>
       <p className="section-subtitle text-center mx-auto mb-6">
-        Selecciona hasta 3 herramientas. Sin estrellas ni rankings arbitrarios.
+        Selecciona hasta 3 herramientas. Compara sus enfoques, no un ranking: cada función y sus límites pueden variar según el plan, la cuenta, la región y la fecha.
       </p>
       <div className="flex flex-wrap justify-center gap-3 mb-8">
         {tools.map(t => {
@@ -756,15 +796,20 @@ function AppContent() {
                     const val = capabilityMap[id][cat];
                     return (
                       <td key={id} className="p-3 text-center">
-                        <span className={cn(
-                          'inline-block px-2 py-0.5 rounded text-xs',
-                          val === 'Disponible' && 'bg-emerald-500/20 text-emerald-300',
-                          val === 'Enfoque relevante' && 'bg-primary-500/20 text-primary-300',
-                          val === 'Puede depender del plan' && 'bg-amber-500/20 text-amber-300',
-                          val === 'Verificar disponibilidad actual' && 'bg-slate-600/40 text-slate-400'
-                        )}>
-                          {val}
-                        </span>
+                        <div className="min-w-36">
+                          <span className={cn(
+                            'inline-block px-2 py-0.5 rounded text-xs',
+                            val === 'Disponible' && 'bg-emerald-500/20 text-emerald-300',
+                            val === 'Enfoque relevante' && 'bg-primary-500/20 text-primary-300',
+                            val === 'Puede depender del plan' && 'bg-amber-500/20 text-amber-300',
+                            val === 'Verificar disponibilidad actual' && 'bg-slate-600/40 text-slate-300'
+                          )}>
+                            {val}
+                          </span>
+                          <p className="text-xs text-slate-500 mt-2 leading-relaxed">
+                            {capabilityStatusDetails[val]}
+                          </p>
+                        </div>
                       </td>
                     );
                   })}
@@ -773,8 +818,33 @@ function AppContent() {
             </tbody>
           </table>
           <p className="text-xs text-slate-500 mt-4 text-center">
-            Las capacidades evolucionan. «Verificar disponibilidad actual» indica que la función puede cambiar con el tiempo o el plan.
+            Es una guía orientativa, no una garantía de disponibilidad. Los proveedores actualizan funciones y planes; comprueba la información oficial antes de elegir o contratar.
           </p>
+        </div>
+      )}
+      {compareTools.length > 0 && (
+        <div className="mt-8">
+          <h3 className="text-lg font-semibold text-white mb-4">Planes y límites de las herramientas seleccionadas</h3>
+          <div className="grid md:grid-cols-2 gap-4">
+            {compareTools.map(id => {
+              const details = toolPlanDetails[id];
+              return (
+                <article key={id} className="card p-5">
+                  <h4 className="font-semibold text-primary-200">{getToolById(id)?.name}</h4>
+                  <p className="text-sm text-slate-300 mt-2">{details.plans}</p>
+                  <p className="text-sm text-slate-400 mt-2">{details.note}</p>
+                  <a
+                    href={details.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-block text-sm text-primary-300 hover:text-primary-200 underline underline-offset-4 mt-3"
+                  >
+                    {details.linkLabel} ↗
+                  </a>
+                </article>
+              );
+            })}
+          </div>
         </div>
       )}
       <div className="flex justify-center mt-10">
