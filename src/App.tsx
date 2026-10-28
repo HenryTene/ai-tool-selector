@@ -59,6 +59,7 @@ function AppContent() {
   const { isTeacher, revealAll } = useTeacher();
   const [section, setSection] = useState<Section>('hero');
   const [questionPhase, setQuestionPhase] = useState(0);
+  const [openingAnswerVisible, setOpeningAnswerVisible] = useState(false);
   const [openingTool, setOpeningTool] = useState<ToolId | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedTool, setSelectedTool] = useState<ToolId | null>(null);
@@ -73,9 +74,12 @@ function AppContent() {
   const [compareTools, setCompareTools] = useState<ToolId[]>([]);
   const [caseAnswers, setCaseAnswers] = useState<Record<number, boolean>>({});
   const [riskAnswers, setRiskAnswers] = useState<Record<number, string>>({});
+  const [riskAnswerVisibility, setRiskAnswerVisibility] = useState<Record<number, boolean>>({});
   const [challengeIndex, setChallengeIndex] = useState(0);
   const [challengeAnswers, setChallengeAnswers] = useState<Record<number, { type: boolean; tool: boolean; validation: boolean }>>({});
+  const [challengeAnswerVisibility, setChallengeAnswerVisibility] = useState<Record<number, boolean>>({});
   const [challengeScore, setChallengeScore] = useState<number | null>(null);
+  const [challengeReviewVisible, setChallengeReviewVisible] = useState(false);
   const [challengeType, setChallengeType] = useState('');
   const [challengeTool, setChallengeTool] = useState<ToolId | ''>('');
   const [retoData, setRetoData] = useState({
@@ -91,6 +95,7 @@ function AppContent() {
 
   const resetActivities = () => {
     setQuestionPhase(0);
+    setOpeningAnswerVisible(false);
     setOpeningTool(null);
     setSelectedCategory(null);
     setSelectedTool(null);
@@ -99,9 +104,12 @@ function AppContent() {
     setCompareTools([]);
     setCaseAnswers({});
     setRiskAnswers({});
+    setRiskAnswerVisibility({});
     setChallengeIndex(0);
     setChallengeAnswers({});
+    setChallengeAnswerVisibility({});
     setChallengeScore(null);
+    setChallengeReviewVisible(false);
     setChallengeType('');
     setChallengeTool('');
     setRetoData({ need: '', info: '', internet: '', files: '', risk: '', type: '', tool: '', validation: '', kpi: '' });
@@ -293,6 +301,21 @@ function AppContent() {
             Puedes seleccionar una opción para reflexionar o continuar directamente. La pantalla no avanzará automáticamente.
           </p>
           <button
+            onClick={() => setOpeningAnswerVisible(v => !v)}
+            aria-expanded={openingAnswerVisible}
+            className="btn-secondary mt-6"
+          >
+            {openingAnswerVisible ? 'Ocultar respuesta' : 'Ver respuesta'}
+          </button>
+          {openingAnswerVisible && (
+            <div className="card p-5 mt-4 max-w-2xl mx-auto text-left" role="status">
+              <p className="text-emerald-300 font-medium">Respuesta orientativa</p>
+              <p className="text-slate-300 text-sm mt-2">
+                No existe una única IA que sea la mejor para todo. La respuesta depende de la tarea, la información disponible, el riesgo y la validación necesaria.
+              </p>
+            </div>
+          )}
+          <button
             onClick={() => setQuestionPhase(1)}
             className="btn-primary mt-6"
           >
@@ -455,7 +478,9 @@ function AppContent() {
     return (
       <section className="px-4 py-16 max-w-3xl mx-auto">
         <h2 className="section-title text-center">Selector de herramientas de IA</h2>
-        <p className="section-subtitle text-center mx-auto mb-10">¿Qué necesitas hacer?</p>
+        <p className="section-subtitle text-center mx-auto mb-10">
+          ¿Qué necesitas hacer? No hay una única respuesta correcta: la recomendación depende de tus respuestas y del contexto.
+        </p>
 
         {selectorStep === 1 && (
           <div>
@@ -936,18 +961,28 @@ function AppContent() {
             <p className="text-slate-400 text-sm font-medium mb-2">{c.question}</p>
             {!caseAnswers[c.id] ? (
               <button
-                onClick={() => setCaseAnswers(a => ({ ...a, [c.id]: true }))}
+                onClick={() => setCaseAnswers(a => ({ ...a, [c.id]: !a[c.id] }))}
+                aria-expanded={!!caseAnswers[c.id]}
                 className="btn-secondary text-sm"
               >
-                Ver orientación
+                Ver respuesta correcta
               </button>
             ) : (
-              <div className="bg-slate-900/50 rounded-lg p-4 mt-2 animate-fade-in">
-                <p className="text-emerald-400 text-sm font-medium">{c.expectedType}</p>
-                <p className="text-slate-400 text-sm mt-2">{c.explanation}</p>
-                <p className="text-xs text-slate-500 mt-2">
-                  Herramientas posibles a evaluar: {c.possibleTools.map(id => getToolById(id as ToolId)?.name).join(', ')}
-                </p>
+              <div>
+                <div className="bg-slate-900/50 rounded-lg p-4 mt-2 animate-fade-in" role="status">
+                  <p className="text-emerald-400 text-sm font-medium">{c.expectedType}</p>
+                  <p className="text-slate-400 text-sm mt-2">{c.explanation}</p>
+                  <p className="text-xs text-slate-500 mt-2">
+                    Herramientas posibles a evaluar: {c.possibleTools.map(id => getToolById(id as ToolId)?.name).join(', ')}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setCaseAnswers(a => ({ ...a, [c.id]: false }))}
+                  aria-expanded={!!caseAnswers[c.id]}
+                  className="btn-secondary text-sm mt-3"
+                >
+                  Ocultar respuesta
+                </button>
               </div>
             )}
           </div>
@@ -996,6 +1031,9 @@ function AppContent() {
           <li>• ¿Realmente necesito subir todo el archivo?</li>
         </ul>
       </div>
+      <p className="text-center text-slate-500 text-sm mt-4">
+        Estas son preguntas de reflexión; su respuesta depende de las políticas y circunstancias de cada organización.
+      </p>
       <p className="text-center text-amber-300/90 mt-8 font-medium">
         La capacidad técnica de subir información no significa que debamos hacerlo.
       </p>
@@ -1008,6 +1046,9 @@ function AppContent() {
   const renderValidation = () => (
     <section className="px-4 py-16 max-w-4xl mx-auto">
       <h2 className="section-title text-center">Resultado generado ≠ verdad garantizada</h2>
+      <p className="text-center text-slate-400 text-sm mt-3">
+        Estas preguntas son una guía de reflexión, no tienen una única respuesta correcta.
+      </p>
       <div className="flex flex-col items-center gap-2 my-10">
         {['IA genera resultado', 'Revisar', 'Contrastar', 'Comprobar fuentes', 'Aplicar criterio', 'Utilizar'].map((s, i) => (
           <div key={s} className="flex flex-col items-center">
@@ -1079,6 +1120,18 @@ function AppContent() {
             {riskAnswers[s.id] && riskAnswers[s.id] !== s.level && (
               <p className="text-xs text-amber-400 mt-2">Orientación: esta situación se considera de riesgo {s.level}.</p>
             )}
+            <button
+              onClick={() => setRiskAnswerVisibility(a => ({ ...a, [s.id]: !a[s.id] }))}
+              aria-expanded={!!riskAnswerVisibility[s.id]}
+              className="btn-secondary text-xs mt-3"
+            >
+              {riskAnswerVisibility[s.id] ? 'Ocultar respuesta' : 'Ver respuesta correcta'}
+            </button>
+            {riskAnswerVisibility[s.id] && (
+              <p className="text-sm text-emerald-300 mt-3" role="status">
+                Respuesta: riesgo {s.level}.
+              </p>
+            )}
           </div>
         ))}
       </div>
@@ -1110,12 +1163,36 @@ function AppContent() {
           <p className="text-xl text-white mt-4">{label}</p>
           <p className="text-slate-300 mt-3">{criteriaScore} de {total * 3} criterios correctos: capacidad, herramienta y validación.</p>
           <p className="text-slate-400 mt-4 text-sm">No hay ranking entre estudiantes. El objetivo es desarrollar criterio.</p>
+          <button
+            onClick={() => setChallengeReviewVisible(v => !v)}
+            aria-expanded={challengeReviewVisible}
+            className="btn-secondary mt-6"
+          >
+            {challengeReviewVisible ? 'Ocultar respuestas correctas' : 'Ver respuestas correctas'}
+          </button>
+          {challengeReviewVisible && (
+            <div className="text-left space-y-4 mt-6">
+              {challengeScenarios.map(item => (
+                <div key={item.id} className="card p-4">
+                  <p className="text-sm font-medium text-white">Escenario {item.id}</p>
+                  <ul className="text-sm text-slate-300 mt-2 space-y-1">
+                    <li>Capacidad: {item.correctType}</li>
+                    <li>Herramientas posibles: {item.correctTools.map(id => getToolById(id as ToolId)?.name).join(', ')}</li>
+                    <li>Validación: {item.validationOptions.find(option => option.correct)?.text}</li>
+                  </ul>
+                  <p className="text-sm text-slate-400 mt-2">{item.explanation}</p>
+                </div>
+              ))}
+            </div>
+          )}
           <div className="flex flex-wrap justify-center gap-3 mt-10">
             <button
               onClick={() => {
                 setChallengeIndex(0);
                 setChallengeAnswers({});
+                setChallengeAnswerVisibility({});
                 setChallengeScore(null);
+                setChallengeReviewVisible(false);
                 setChallengeType('');
                 setChallengeTool('');
               }}
@@ -1222,6 +1299,24 @@ function AppContent() {
             {!challengeType || !challengeTool ? (
               <p className="text-xs text-slate-500 mt-3">Selecciona primero la capacidad y la herramienta candidata.</p>
             ) : null}
+            <button
+              onClick={() => setChallengeAnswerVisibility(a => ({ ...a, [scenario.id]: !a[scenario.id] }))}
+              aria-expanded={!!challengeAnswerVisibility[scenario.id]}
+              className="btn-secondary text-sm mt-4"
+            >
+              {challengeAnswerVisibility[scenario.id] ? 'Ocultar respuesta correcta' : 'Ver respuesta correcta'}
+            </button>
+            {challengeAnswerVisibility[scenario.id] && (
+              <div className="mt-3 rounded-xl border border-emerald-700/50 bg-emerald-950/20 p-4" role="status">
+                <p className="text-sm font-medium text-emerald-300">Respuesta correcta orientativa</p>
+                <ul className="text-sm text-slate-300 mt-2 space-y-1">
+                  <li>Capacidad: {scenario.correctType}</li>
+                  <li>Herramientas posibles: {scenario.correctTools.map(id => getToolById(id as ToolId)?.name).join(', ')}</li>
+                  <li>Validación: {scenario.validationOptions.find(option => option.correct)?.text}</li>
+                </ul>
+                <p className="text-sm text-slate-400 mt-3">{scenario.explanation}</p>
+              </div>
+            )}
             {answered && (
               <div className="mt-4 rounded-xl border border-slate-700 bg-slate-900/50 p-4" role="status">
                 <p className="text-sm font-medium text-white">Resultado del escenario</p>
@@ -1263,6 +1358,9 @@ function AppContent() {
       <h2 className="section-title text-center">Reto personal</h2>
       <p className="section-subtitle text-center mx-auto mb-8">
         Elige una tarea real de tu trabajo o estudios y completa tu ficha de selección.
+      </p>
+      <p className="text-center text-slate-500 text-sm mb-6">
+        Esta ficha es personal y no tiene una única respuesta correcta.
       </p>
       {!retoGenerated ? (
         <div className="space-y-4">

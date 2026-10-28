@@ -36,6 +36,7 @@ Abre la URL que muestre Vite (normalmente http://localhost:5173).
 - No rankings ni «mejor IA»
 - No precios ni límites numéricos fijos
 - Datos de herramientas en configuración independiente
+- Respuestas correctas y orientaciones disponibles en los mini casos, el semáforo de riesgo y el desafío
 - Modo docente con revelado de orientaciones y reinicio de actividades
 - Validación y privacidad como ejes centrales
 - Empresa transversal NOVA S.A.C.
